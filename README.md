@@ -4,10 +4,10 @@
 Local Network is stable and fast, why not try UDP to make communication faster? It is recommend to change the Request and Response struct in `struct.go` for your needs.
 
 ## Default Settings
-- MaxSize : buffer size of read
-- WriteTimeout : Duration of write ACK
-- WriteTimeLimit : Retry times of write
-- ReadTimeou : Duration of read timeout
+- MaxSize : 65535 ( buffer size of read )
+- WriteTimeout : 2s ( Duration of write ACK )
+- WriteTimeLimit : 5 ( Retry times of write )
+- ReadTimeou : 10s ( Duration of read timeout )
 
 ## Methods
 **func GetStream(listen string, list map[string]string) (\*UDP, error)**  
@@ -28,25 +28,24 @@ Close Listener.
 **func (\*UDP) Write(data []byte, servName string) error**  
 Write byte slice to service. Useful when current service just do request routing, you can directly send []byte which get from `*UDP.Listen()` without use `*UDP.SendReq()` to skip gob encode.  
 \> data : byte slice to send  
-\> servName : service name
+\> servName : service name  
 
-**func (\*UDP) Push(push *Push, servName string) error**  
+**func (\*UDP) Push(push \*Push, servName string) error**  
 Push JSON data to service, useful for communicating with services outside local GO enviroment. See example below for more info.  
 \> push : `*Push` struct, this will convert to JSON format  
-\> servName : service name
+\> servName : service name  
 
-
-**func (\*UDP) SendReq(req *Request, servName string) error**  
+**func (\*UDP) SendReq(req \*Request, servName string) error**  
 Send `*Request` without waiting for `*Response` struct.  
 \> req : `*Request` struct  
 \> servName : service name  
 
-**func (\*UDP) Request(req *Request, servName string) (*Response, error)**  
+**func (\*UDP) Request(req \*Request, servName string) (\*Response, error)**  
 Send `*Request` then wait target service response.  
 \> req : `*Request` struct  
 \> servName : service name  
 
-**func (\*UDP) Response(res *Response, src *Src)**  
+**func (\*UDP) Response(res \*Response, src \*Src)**  
 Response other service's `*Request`.  
 \> res : `*Response` struct  
 \> src : `*Src` struct. Which get from `*UDP.Listen()`   
@@ -150,4 +149,4 @@ Below is some of my experiences on this project, if you have better solution or 
 If you read my codes, you can find that I prepare an array and looping index to buffer the request. I built a pure `channel` version before but it can't pass stress test. When concurrent requests in high frequency keep coming, large amounts of goroutines will be created and GO have to keep searching who is waiting for particular `channel`. It is going to cost your memory and may over W/R timeout ( or you have to make it longer ). Tough the `Array` way need to do `Mutex.Lock()` to prevent concurrent read ( different requests may get same index ) which lock whole process. Instead, with manually GC it can control memory in a stable amount.
 
 **Why not re-use Gob encoder/decoder**  
-I built a "gob re-use" version before, but same issue; it can't pass stress test. Reusing encoder/decoder can reduce data size and memory usage in low stress situation. When concurrent requests come faster then encode/decode speed, process have to queue data and wait until encoder/decoder is available. Lots of goroutines is blocked and waiting but usually CPU have resource can do it concurrently. 
+I built a "gob re-use" version before, but same issue; it can't pass stress test. Reusing encoder/decoder can reduce data size and memory usage in low stress situation. When concurrent requests come faster then encode/decode speed, process have to queue data and wait until encoder/decoder is available. Lots of goroutines is blocked and waiting but usually CPU have resource can do it concurrently.
