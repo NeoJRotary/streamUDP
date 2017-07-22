@@ -97,7 +97,6 @@ func (udp *UDP) Listen() (*Request, *Src, []byte, error) {
 		if n == 4 {
 			go udp.writers[i].write([]byte{6})
 		}
-
 		if n >= 8 {
 			go udp.Listener.WriteToUDP(data[4:8], addr)
 		}
@@ -114,7 +113,7 @@ func (udp *UDP) Listen() (*Request, *Src, []byte, error) {
 					Addr: addr,
 					I:    binary.LittleEndian.Uint32(data[4:8]),
 				}
-				return req, src, data[8:], nil
+				return req, src, data[8:n], nil
 			}
 			go udp.writers[i].write(data[8:n])
 		}
