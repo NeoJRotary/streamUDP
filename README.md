@@ -58,23 +58,23 @@ package main
 import (
   "time"
 
-	stream "./packages/streamUDP"
+  stream "./packages/streamUDP"
 )
 
 func main() {
   serv.udp = "localhost:9903"
 
   // list of other services in same enviroment
-	udpServs := map[string]string{
-		"rest":     "localhost:9900",
-		"host":     "localhost:9901",
-		"db":       "localhost:9902",
-	}
+  udpServs := map[string]string{
+    "rest":     "localhost:9900",
+    "host":     "localhost:9901",
+    "db":       "localhost:9902",
+  }
 
   streamer, err = stream.GetStream(serv.udp, udpServs)
-	if err != nil {
-		fmt.Fatalln("stream init fail: " + err.Error())
-	}
+  if err != nil {
+    fmt.Fatalln("stream init fail: " + err.Error())
+  }
   defer streamer.Close()
 
   // change settings
@@ -84,27 +84,27 @@ func main() {
   streamer.ReadTimeout = 10 * time.Second
 
   // must run listen before make any request/write
-	go func() {
-		for {
-			req, src, _, err := streamer.Listen()
+  go func() {
+    for {
+      req, src, _, err := streamer.Listen()
       // streamer close
-			if req == nil && err == nil {
-				break
-			}
+      if req == nil && err == nil {
+        break
+      }
       // check error
-			if err != nil {
-				fmt.Println("Listener Error :" + err.Error())
-			} else {
-				go streamAPI(req, src)
-			}
-		}
-	}()
+      if err != nil {
+        fmt.Println("Listener Error :" + err.Error())
+      } else {
+        go streamAPI(req, src)
+      }
+    }
+  }()
 
   // create a *Request
   req := &stream.Request{
-		Type: "GetData",
-		Data: map[string]string{"id": "12345"},
-	}
+    Type: "GetData",
+    Data: map[string]string{"id": "12345"},
+  }
 
   // send *Request without waiting for *Response
   err := streamer.SendReq(req, "host")
